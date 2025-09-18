@@ -53,7 +53,14 @@ services:
       - "8082:80"
 
   lucy:
+   # Imagen con PHP 8.2 (actual)
     image: webdevops/php-apache-dev:8.2
+    
+    # Otras versiones disponibles y soportadas:
+    # image: webdevops/php-apache-dev:8.3   # PHP 8.3
+    # image: webdevops/php-apache-dev:8.1   # PHP 8.1
+    # image: webdevops/php-apache-dev:7.4   # PHP 7.4 (última del 7.x)
+
     depends_on: [db]
     restart: unless-stopped
     environment:
