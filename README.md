@@ -169,4 +169,12 @@ lnpm run build
 lcomposer require laravel/sanctum
 ```
 
+## Versiones PHP para Lucy
+Podés cambiar versión de PHP solo editando la etiqueta de la imagen (8.2, 8.3, etc.) y levantando de nuevo:
+
+```
+docker compose pull lucy
+docker compose up -d lucy
+```
+
 CMD
