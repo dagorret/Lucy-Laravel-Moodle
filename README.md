@@ -168,3 +168,5 @@ lartisan migrate
 lnpm run build
 lcomposer require laravel/sanctum
 ```
+
+CMD
