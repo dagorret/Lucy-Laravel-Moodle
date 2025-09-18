@@ -177,4 +177,40 @@ docker compose pull lucy
 docker compose up -d lucy
 ```
 
+## Comandos Iniciales completos
+
+```
+# 1. Clonar el proyecto
+git clone https://github.com/usuario/proyecto.git
+cd proyecto
+
+# 2. Copiar el archivo de entorno para Lucy
+cp lucy/.env.example lucy/.env
+
+# 3. Levantar todos los servicios
+./Script/start.sh
+
+# 4. Generar la APP_KEY de Laravel
+docker compose exec lucy php artisan key:generate
+
+# 5. Instalar dependencias PHP
+docker compose exec composer composer install --no-interaction --prefer-dist
+
+# 6. Instalar dependencias JS
+docker compose exec node npm ci
+docker compose exec node npm run build
+
+# 7. (Opcional) Reparar permisos de Laravel
+docker compose exec lucy chown -R application:application /app/storage /app/bootstrap/cache
+docker compose exec lucy chmod -R 775 /app/storage /app/bootstrap/cache
+```
+
+Con esto ya queda:
+
+- Moodle en http://localhost:8080
+- Lucy (Laravel) en http://localhost:8081
+- phpMyAdmin en http://localhost:8082
+
+MailHog en http://localhost:8025
+
 CMD
