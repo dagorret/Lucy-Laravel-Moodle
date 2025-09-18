@@ -37,8 +37,6 @@ cd proyecto
 ./Script/start.sh
 ```
 
-Esto inicia **Moodle, Lucy, MariaDB, phpMyAdmin, MailHog, Node y Composer**.
-
 ### 3. Verificar servicios
 ```bash
 docker compose ps
@@ -47,6 +45,22 @@ docker compose ps
 ---
 
 ## Lucy (Laravel)
+
+### Agregar Laravel al directorio `lucy`
+
+Si aún no tenés Laravel dentro de `lucy`, podés instalarlo con:
+
+```bash
+docker compose run --rm composer create-project laravel/laravel .
+```
+
+Este comando debe ejecutarse desde el directorio `lucy`:
+```bash
+cd lucy
+docker compose run --rm composer create-project laravel/laravel .
+```
+
+Una vez instalado, asegurate de generar la APP_KEY y configurar `.env` con la base de datos `moodle` y MailHog.
 
 ### Generar APP_KEY
 ```bash
@@ -63,6 +77,26 @@ docker compose exec composer composer install --no-interaction --prefer-dist
 docker compose exec node npm ci
 docker compose exec node npm run build
 ```
+
+---
+
+## Agregar un componente Laravel (ejemplo: Filament)
+
+Puedes añadir componentes de Laravel directamente usando Composer.  
+Ejemplo para instalar **Filament** (panel de administración):
+
+```bash
+docker compose exec composer composer require filament/filament:"^3.0"
+```
+
+Después, publicá los assets y configuraciones necesarias según la documentación oficial de Filament:
+
+```bash
+docker compose exec lucy php artisan vendor:publish --tag=filament-config
+```
+
+Esto agregará un panel de administración accesible normalmente en `/admin` dentro de Lucy:  
+👉 [http://localhost:8081/admin](http://localhost:8081/admin)
 
 ---
 
