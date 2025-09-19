@@ -52,32 +52,19 @@ services:
       - "8082:80"
 
   lucy:
-   # Imagen con PHP 8.2 (actual)
     image: webdevops/php-apache-dev:8.2
-    
-    # Otras versiones disponibles y soportadas:
-    # image: webdevops/php-apache-dev:8.3   # PHP 8.3
-    # image: webdevops/php-apache-dev:8.1   # PHP 8.1
-    # image: webdevops/php-apache-dev:7.4   # PHP 7.4 (última del 7.x)
-
-    depends_on: [db]
-    restart: unless-stopped
+    working_dir: /app
     environment:
       - WEB_DOCUMENT_ROOT=/app/public
       - PHP_DATE_TIMEZONE=America/Argentina/Cordoba
       - PHP_UPLOAD_MAX_FILESIZE=256M
       - PHP_POST_MAX_SIZE=256M
+      - APPLICATION_UID=1000    # UID de tu usuario "zeus"
+      - APPLICATION_GID=1000    # GID de tu usuario "zeus"
     volumes:
       - ./lucy:/app
     ports:
       - "8081:80"
-
-  mailhog:
-    image: mailhog/mailhog:latest
-    restart: unless-stopped
-    ports:
-      - "8025:8025"
-
   node:
     image: node:20
     working_dir: /app
