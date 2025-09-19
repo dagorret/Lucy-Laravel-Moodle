@@ -255,17 +255,16 @@ MailHog en http://localhost:8025
 ## Para asegurar los permisos
 
 veco/moodledata debe ser escribible por el usuario del contenedor (normalmente www-data, uid 33):
-
-´´´
+```
 sudo chown -R 33:33 veco/moodledata
 sudo chmod -R 770 veco/moodledata
-´´´
+```
 
 o dentro del contenedor
 
-´´´
+```
 docker compose exec web bash -lc 'chown -R www-data:www-data /var/moodledata && chmod -R 770 /var/moodledata'
-´´´
+```
 
 lucy/ con dueño root. Mejor pasarlo a tu usuario para evitar problemas de escritura desde host:
 
