@@ -301,6 +301,13 @@ docker compose exec composer bash -lc 'test -f artisan || composer create-projec
 sudo chown -R zeus:zeus lucy
 ```
 
+
+```
+docker compose exec -u $(id -u):$(id -g) composer bash -lc 'test -f artisan || composer create-project --prefer-dist laravel/laravel .'
+```
+
+Este ultimo comando toma mi uid y gid de una
+
 ---
 
 ## 2) Configurar `.env` de Lucy
