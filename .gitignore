@@ -1,0 +1,24 @@
+# Ignorar configuraciones locales
+.env
+.env.*.local
+.phpunit.result.cache
+Homestead.yaml
+Homestead.json
+npm-debug.log
+yarn-error.log
+
+# Ignorar directorio personalizado
+veco/
+
+# Ignorar dependencias y compilados
+/vendor
+/node_modules
+/public/storage
+/storage/*.key
+/storage/framework/cache/data
+/storage/logs
+/storage/debugbar
+
+# Ignorar archivos de Docker locales
+docker-compose.override.yml
+
