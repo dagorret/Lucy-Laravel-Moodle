@@ -274,4 +274,171 @@ sudo chown -R zeus:zeus lucy
 ```
 
 zeus es un usuario propietario del docker
+
+
+
+# Lucy (Laravel) + Moodle (veco) — Paso a paso (conciso)
+
+> **Objetivo**: tener **Lucy (Laravel)** en `./lucy` (expuesta en `http://localhost:8081`) y **Moodle** en `./veco` (expuesta en `http://localhost:8080`), usando tu `docker-compose.yml` actual.
+
+---
+
+## 0) Requisitos y permisos
+- Docker y Docker Compose instalados.
+- Puertos libres: **8080** (Moodle), **8081** (Lucy), **8025** (Mailhog).
+- Asegurá permisos en el host:
+```bash
+sudo chown -R zeus:zeus lucy
+```
+> *Si `veco/moodledata` da errores de escritura, más abajo hay comandos para fijar permisos.*
+
+---
+
+## 1) Crear proyecto Laravel en `./lucy`
+Usando el servicio `composer` ya definido en tu compose (mapea `./lucy → /app`):
+```bash
+docker compose up -d composer
+docker compose exec composer bash -lc 'test -f artisan || composer create-project --prefer-dist laravel/laravel .'
+sudo chown -R zeus:zeus lucy
+```
+
+---
+
+## 2) Configurar `.env` de Lucy
+```bash
+cp lucy/.env.example lucy/.env
+```
+Editá `lucy/.env` con estos valores mínimos:
+```
+APP_NAME=Lucy
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://localhost:8081
+
+DB_CONNECTION=mysql
+DB_HOST=db
+DB_PORT=3306
+DB_DATABASE=lucy
+DB_USERNAME=lucy
+DB_PASSWORD=lucypass
+
+# Mailhog (opcional)
+MAIL_MAILER=smtp
+MAIL_HOST=mailhog
+MAIL_PORT=1025
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_ENCRYPTION=null
+MAIL_FROM_ADDRESS=dev@example.test
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+---
+
+## 3) Crear la base de datos para Lucy (separada de Moodle)
+```bash
+docker compose exec db mysql -uroot -prootpass -e "CREATE DATABASE IF NOT EXISTS lucy CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE USER IF NOT EXISTS 'lucy'@'%' IDENTIFIED BY 'lucypass'; GRANT ALL PRIVILEGES ON lucy.* TO 'lucy'@'%'; FLUSH PRIVILEGES;"
+```
+
+---
+
+## 4) Levantar servicios
+```bash
+docker compose up -d --build
+```
+
+---
+
+## 5) Inicializar Lucy
+```bash
+# Verificación rápida
+docker compose exec lucy php -v
+docker compose exec lucy php artisan --version
+
+# Inicialización
+docker compose exec lucy php artisan key:generate
+docker compose exec composer composer install --no-interaction --prefer-dist
+docker compose exec node npm ci --no-audit --no-fund
+docker compose exec node npm run build
+docker compose exec lucy php artisan storage:link
+
+# Si usás migraciones
+docker compose exec lucy php artisan migrate
+```
+
+---
+
+## 6) Permisos de ejecución en Lucy (runtime)
+```bash
+docker compose exec lucy bash -lc 'chown -R application:application /app/storage /app/bootstrap/cache && chmod -R 775 /app/storage /app/bootstrap/cache'
+```
+
+---
+
+## 7) Permisos de Moodle (si hace falta)
+```bash
+docker compose exec web bash -lc 'chown -R www-data:www-data /var/moodledata && chmod -R 770 /var/moodledata'
+```
+
+---
+
+## 8) Endpoints y verificación
+
+- **Lucy (Laravel)**: http://localhost:8081  
+- **Moodle (veco)**: http://localhost:8080  
+- **Mailhog**: http://localhost:8025
+
+Comprobaciones rápidas:
+```bash
+# ¿Laravel está montado y ve artisan?
+docker compose exec lucy bash -lc 'pwd; ls -l artisan || echo "NO artisan"'
+
+# ¿Variables clave en lucy/.env?
+grep -E 'APP_URL|DB_HOST|DB_DATABASE|DB_USERNAME' lucy/.env
+
+# ¿Moodle ve su código y datos?
+docker compose exec web bash -lc 'ls -ld /var/www/html /var/moodledata'
+```
+
+---
+
+## 9) (Solo por claridad) Montajes esperados en tu `docker-compose.yml`
+
+**Moodle** (no modificar tus rutas actuales):
+```yaml
+web:
+  volumes:
+    - ./veco/moodle:/var/www/html
+    - ./veco/moodledata:/var/moodledata
+
+cron:
+  volumes:
+    - ./veco/moodle:/var/www/html
+    - ./veco/moodledata:/var/moodledata
+
+db:
+  volumes:
+    - ./veco/db:/var/lib/mysql
+```
+
+**Lucy (Laravel):**
+```yaml
+lucy:
+  working_dir: /app
+  volumes:
+    - ./lucy:/app
+
+composer:
+  working_dir: /app
+  volumes:
+    - ./lucy:/app
+
+node:
+  working_dir: /app
+  volumes:
+    - ./lucy:/app
+```
+
+> El aviso de Compose por `version:` obsoleta es informativo. Podés quitar la clave `version:` si querés.
+
 CMD
