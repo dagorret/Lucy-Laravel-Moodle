@@ -22,3 +22,4 @@ veco/
 # Ignorar archivos de Docker locales
 docker-compose.override.yml
 
+/lucy
