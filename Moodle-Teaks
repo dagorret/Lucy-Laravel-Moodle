@@ -1,0 +1,81 @@
+# Checklist de verificación y ajustes en Moodle Docker
+
+## 1) Upgrade y purga de cachés
+Con datos heredados es fundamental:
+```bash
+docker exec -it lucy-laravel-moodle-web-1 bash -lc \
+ 'php /var/www/html/admin/cli/upgrade.php --non-interactive && \
+  php /var/www/html/admin/cli/purge_caches.php'
+```
+Esto sincroniza la base con la versión de código y limpia posibles cachés corruptas.
+
+---
+
+## 2) Activar depuración para diagnosticar errores
+Si ves pantalla en blanco o error 500, habilitá debug:
+```bash
+docker exec -it lucy-laravel-moodle-web-1 bash -lc \
+ 'php /var/www/html/admin/cli/cfg.php --name=debug --set=32767 && \
+  php /var/www/html/admin/cli/cfg.php --name=debugdisplay --set=1'
+```
+Para desactivar después: `--set=0`.
+
+---
+
+## 3) Validar URL (`wwwroot`) y sesiones
+El valor en `config.php` debe coincidir exactamente con la URL de acceso:
+```php
+$CFG->wwwroot = 'http://200.7.134.12:8080';
+```
+- Si usás un dominio, actualizalo con:
+  ```bash
+  docker exec -it lucy-laravel-moodle-web-1 bash -lc \
+   'php /var/www/html/admin/cli/cfg.php --name=wwwroot --set="https://tu-dominio"'
+  ```
+- Si usás proxy/https, activá:
+  ```bash
+  docker exec -it lucy-laravel-moodle-web-1 bash -lc \
+   'php /var/www/html/admin/cli/cfg.php --name=reverseproxy --set=1 && \
+    php /var/www/html/admin/cli/cfg.php --name=sslproxy --set=1'
+  ```
+
+---
+
+## 4) Conexión a la base de datos
+Ya comprobaste que funciona:
+```bash
+mysql -h db -umoodle -pmoodlepass -e "SHOW DATABASES;"
+```
+Si alguna vez falla, revisá credenciales o logs del contenedor `db`.
+
+---
+
+## 5) Cron y tareas programadas
+Probá correrlo manualmente:
+```bash
+docker exec -it lucy-laravel-moodle-web-1 bash -lc \
+ 'php /var/www/html/admin/cli/cron.php'
+```
+No debería tirar errores fatales. El servicio `cron` de Docker mantendrá la ejecución cada minuto.
+
+---
+
+## 6) Si aún falla: recoger evidencias
+Pedí logs y config básica:
+```bash
+docker exec -it lucy-laravel-moodle-web-1 bash -lc \
+ 'tail -n 200 /var/log/apache2/error.log'
+
+docker exec -it lucy-laravel-moodle-web-1 bash -lc \
+ 'php /var/www/html/admin/cli/cfg.php --component=core --list \
+   | grep -E "wwwroot|dataroot|reverseproxy|sslproxy|slasharguments"'
+```
+Con eso se detectan problemas de URL, permisos o configuración.
+
+---
+
+# Comentarios finos sobre `config.php`
+- `slasharguments = 1` → correcto (permite URLs amigables).
+- `directorypermissions = 02777` → funcional, aunque más conservador sería `02775`.
+- `noemailever = true` → útil para testing, evita envío real de correos.
+- Estilos extra en `$CFG->additionalhtmlhead` → no interfieren con el core, solo afectan la pantalla de login.
