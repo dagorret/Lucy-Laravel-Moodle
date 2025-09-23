@@ -59,19 +59,15 @@ services:
       - PHP_DATE_TIMEZONE=America/Argentina/Cordoba
       - PHP_UPLOAD_MAX_FILESIZE=256M
       - PHP_POST_MAX_SIZE=256M
-      - APPLICATION_UID=1001    # UID de tu usuario "zeus"
-      - APPLICATION_GID=1001    # GID de tu usuario "zeus"
+      - APPLICATION_UID=10001
+      - APPLICATION_GID=10001
+      - HOME=/home/app
+      - COMPOSER_HOME=/home/app/.composer
+      - COMPOSER_CACHE_DIR=/home/app/.composer/cache
     volumes:
       - ./lucy:/app
     ports:
       - "8081:80"
-  node:
-    image: node:20
-    user: "1001:1001"    
-    working_dir: /app
-    volumes:
-      - ./lucy:/app
-    command: ["sleep", "infinity"]
 
   composer:
     image: composer:2
@@ -80,3 +76,14 @@ services:
     volumes:
       - ./lucy:/app
     command: ["sleep", "infinity"]
+
+  node:
+    image: node:20
+    working_dir: /app
+    user: "10001:10001"
+    environment:
+      - HOME=/home/app
+    volumes:
+      - ./lucy:/app
+    command: ["sleep", "infinity"]
+
