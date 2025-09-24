@@ -1,3 +1,11 @@
+# =================== CONFIGURACIONES (editar según necesidad) ===================
+# WEB_PORT: puerto host para Moodle (HTTP). Se usa 8080 para mantener "el actual".
+# DB_HOST_PORT: puerto host NO estándar para MariaDB (p.e. 3307).
+# Volúmenes:
+#   ./veco/moodle      -> código Moodle (bind mount)
+#   ./veco/moodledata  -> datos Moodle (subidas, caches)
+#   ./veco/db          -> datos MariaDB
+# ===============================================================================
 services:
   db:
     image: mariadb:10.11
@@ -7,11 +15,12 @@ services:
       - MYSQL_USER=moodle
       - MYSQL_PASSWORD=moodlepass
       - MYSQL_ROOT_PASSWORD=rootpass
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
     volumes:
       - ./veco/db:/var/lib/mysql
-    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
     ports:
-      - "127.0.0.1:3306:3306"
+      # Expuesto en puerto NO estándar del host para administración/desarrollo
+      - "3307:3306"
 
   web:
     image: moodlehq/moodle-php-apache:8.2
@@ -27,12 +36,19 @@ services:
       - ./veco/moodle:/var/www/html
       - ./veco/moodledata:/var/moodledata
     ports:
+      # Mantener "el actual" (8080). Si quiere 8081, cambie a "8081:80"
       - "8080:80"
 
   cron:
     image: moodlehq/moodle-php-apache:8.2
     depends_on: [web]
     restart: unless-stopped
+    environment:
+      - MOODLE_DOCKER_DBTYPE=mariadb
+      - MOODLE_DOCKER_DBHOST=db
+      - MOODLE_DOCKER_DBNAME=moodle
+      - MOODLE_DOCKER_DBUSER=moodle
+      - MOODLE_DOCKER_DBPASS=moodlepass
     volumes:
       - ./veco/moodle:/var/www/html
       - ./veco/moodledata:/var/moodledata
@@ -45,50 +61,14 @@ services:
     environment:
       - PMA_HOST=db
       - PMA_PORT=3306
-      - UPLOAD_LIMIT=512M
       - PMA_ARBITRARY=0
+      - UPLOAD_LIMIT=512M
     ports:
-      - "8082:80"
+      # phpMyAdmin del stack Moodle. Use un puerto libre (p.e. 8083) para evitar conflicto con Lucy.
+      - "8083:80"
 
-  # === Lucy todo-en-uno (PHP + Composer + Node/Vite) ===
-  lucy:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    working_dir: /app
-    user: "10001:10001"
-    environment:
-      - WEB_DOCUMENT_ROOT=/app/public
-      - PHP_DATE_TIMEZONE=America/Argentina/Cordoba
-      - PHP_UPLOAD_MAX_FILESIZE=256M
-      - PHP_POST_MAX_SIZE=256M
-      - HOME=/home/app
-      - COMPOSER_HOME=/home/app/.composer
-      - COMPOSER_CACHE_DIR=/home/app/.composer/cache
-    volumes:
-      - ./lucy:/app
-    ports:
-      - "8081:80"    # Apache (Laravel)
-      - "5173:5173"  # Vite dev (opcional)
-
-  # Los siguientes servicios ya no son necesarios con 'lucy' unificado.
-  # Si los dejás, mantenelos apagados:
-  # composer:
-  #   image: composer:2
-  #   user: "10001:10001"
-  #   working_dir: /app
-  #   environment:
-  #     - HOME=/home/app
-  #   volumes:
-  #     - ./lucy:/app
-  #   command: ["sleep", "infinity"]
-  #
-  # node:
-  #   image: node:20
-  #   working_dir: /app
-  #   user: "10001:10001"
-  #   environment:
-  #     - HOME=/home/app
-  #   volumes:
-  #     - ./lucy:/app
-  #   command: ["sleep", "infinity"]
+# =================== NOTAS DE PRODUCCIÓN ===================
+# - Considere poner certificados HTTPS delante (reverse proxy).
+# - Restrinja la exposición de MariaDB si no necesita acceso externo.
+# - Realice backups del volumen ./veco/db con el contenedor detenido.
+# ===============================================================================
