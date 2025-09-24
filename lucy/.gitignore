@@ -1,24 +1,65 @@
-*.log
-.DS_Store
+# ----------------------------------------
+# Laravel
+# ----------------------------------------
+/vendor/
+/node_modules/
+npm-debug.log
+yarn-error.log
+
+# Archivos de entorno (sensibles)
 .env
-.env.backup
-.env.production
-.phpactor.json
-.phpunit.result.cache
-/.fleet
-/.idea
-/.nova
-/.phpunit.cache
-/.vscode
-/.zed
-/auth.json
-/node_modules
-/public/build
-/public/hot
-/public/storage
+.env.*.local
+.env.local
+.env.development.local
+.env.production.local
+.env.test.local
+
+# Caches y logs
 /storage/*.key
-/storage/pail
-/vendor
+/storage/app/public
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/logs/*
+/bootstrap/cache/*
+
+# ----------------------------------------
+# Composer
+# ----------------------------------------
+composer.lock
+phpunit.xml
+phpunit.xml.dist
+
+# ----------------------------------------
+# NPM / Yarn
+# ----------------------------------------
+package-lock.json
+yarn.lock
+
+# ----------------------------------------
+# IDEs y editores
+# ----------------------------------------
+/.idea/
+/.vscode/
+/*.swp
+/.DS_Store
+
+# ----------------------------------------
+# Docker
+# ----------------------------------------
+# Volúmenes y datos de MySQL
+data/db/
+
+# Logs y temporales de contenedores
+*.pid
+*.seed
+*.pid.lock
+
+# ----------------------------------------
+# Otros
+# ----------------------------------------
+/public/storage
 Homestead.json
 Homestead.yaml
-Thumbs.db
+/.phpunit.result.cache
+
