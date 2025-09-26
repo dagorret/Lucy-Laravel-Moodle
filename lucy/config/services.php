@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'sial' => [
+        'base_url' => env('SIAL_BASE_URL'),
+        'user'     => env('SIAL_USER'),
+        'pass'     => env('SIAL_PASS'),
+        'tz'       => env('SIAL_TZ', 'America/Argentina/Cordoba'),
+    ],
+
 ];
