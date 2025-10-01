@@ -7,7 +7,7 @@ npm-debug.log
 yarn-error.log
 
 # Archivos de entorno (sensibles)
-.env
+#.env
 .env.*.local
 .env.local
 .env.development.local
