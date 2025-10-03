@@ -1,11 +1,3 @@
-# =================== CONFIGURACIONES (editar según necesidad) ===================
-# WEB_PORT: puerto host para Moodle (HTTP). Se usa 8080 para mantener "el actual".
-# DB_HOST_PORT: puerto host NO estándar para MariaDB (p.e. 3307).
-# Volúmenes:
-#   ./veco/moodle      -> código Moodle (bind mount)
-#   ./veco/moodledata  -> datos Moodle (subidas, caches)
-#   ./veco/db          -> datos MariaDB
-# ===============================================================================
 services:
   db:
     image: mariadb:10.11
@@ -18,9 +10,11 @@ services:
     command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
     volumes:
       - ./veco/db:/var/lib/mysql
-    ports:
-      # Expuesto en puerto NO estándar del host para administración/desarrollo
-      - "3307:3306"
+    # ⬇️ Sin "ports:" para que NO quede expuesto fuera de Docker
+    networks:
+      campus:
+        aliases:
+          - veco-db   # Lucy/Samuel usarán DB_HOST=veco-db
 
   web:
     image: moodlehq/moodle-php-apache:8.2
@@ -36,8 +30,8 @@ services:
       - ./veco/moodle:/var/www/html
       - ./veco/moodledata:/var/moodledata
     ports:
-      # Mantener "el actual" (8080). Si quiere 8081, cambie a "8081:80"
-      - "8080:80"
+      - "8080:80"   # Moodle expuesto en el host
+    networks: [campus]
 
   cron:
     image: moodlehq/moodle-php-apache:8.2
@@ -52,7 +46,8 @@ services:
     volumes:
       - ./veco/moodle:/var/www/html
       - ./veco/moodledata:/var/moodledata
-    entrypoint: [ "bash", "-lc", "while true; do php /var/www/html/admin/cli/cron.php; sleep 60; done" ]
+    entrypoint: ["bash","-lc","while true; do php /var/www/html/admin/cli/cron.php; sleep 60; done"]
+    networks: [campus]
 
   pma:
     image: phpmyadmin/phpmyadmin:latest
@@ -64,11 +59,10 @@ services:
       - PMA_ARBITRARY=0
       - UPLOAD_LIMIT=512M
     ports:
-      # phpMyAdmin del stack Moodle. Use un puerto libre (p.e. 8083) para evitar conflicto con Lucy.
-      - "8083:80"
+      - "8083:80"  # PhpMyAdmin (cambiá si 8083 está ocupado)
+    networks: [campus]
 
-# =================== NOTAS DE PRODUCCIÓN ===================
-# - Considere poner certificados HTTPS delante (reverse proxy).
-# - Restrinja la exposición de MariaDB si no necesita acceso externo.
-# - Realice backups del volumen ./veco/db con el contenedor detenido.
-# ===============================================================================
+networks:
+  campus:
+    external: true
+

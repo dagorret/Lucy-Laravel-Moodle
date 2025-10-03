@@ -42,4 +42,13 @@ return [
         'tz'       => env('SIAL_TZ', 'America/Argentina/Cordoba'),
     ],
 
+    'graph' => [
+    'tenant_id'       => env('GRAPH_TENANT_ID'),
+    'client_id'       => env('GRAPH_CLIENT_ID'),
+    'client_secret'   => env('GRAPH_CLIENT_SECRET'),
+    'default_domain'  => env('GRAPH_DEFAULT_DOMAIN', 'eco.unrc.edu.ar'),
+    'usage_location'  => env('GRAPH_DEFAULT_USAGE_LOCATION', 'AR'),
+],
+
+
 ];
